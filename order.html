@@ -6,20 +6,7 @@
   <title>จัดการออเดอร์ - ยำร่วมจิตร</title>
   <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;700&display=swap" rel="stylesheet">
   <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#FF5722">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="ยำร่วมจิตร">
-
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js')
-        .then(reg => console.log('Service Worker registered!'))
-        .catch(err => console.log('Service Worker failed', err));
-    });
-  }
-</script>
+  <meta name="theme-color" content="#FF5722">
   <style>
     :root {
       --primary: #FF5722;
@@ -28,119 +15,37 @@
       --card-bg: #ffffff;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { 
-      font-family: 'Mali', cursive; 
-      background: var(--bg); 
-      color: #fff; 
-      padding: 10px;
-    }
+    body { font-family: 'Mali', cursive; background: var(--bg); color: #fff; padding: 10px; }
 
     /* Header */
-    .header {
-      padding: 15px 5px;
-      text-align: center;
-      border-bottom: 2px solid var(--primary);
-      margin-bottom: 15px;
-    }
+    .header { padding: 15px 5px; text-align: center; border-bottom: 2px solid var(--primary); margin-bottom: 15px; }
     .header h1 { font-size: 1.8rem; margin-bottom: 10px; }
-    
-    .btn-audio {
-      width: 100%;
-      padding: 15px;
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 12px;
-      font-family: 'Mali';
-      font-weight: bold;
-      font-size: 1.1rem;
-      cursor: pointer;
-      box-shadow: 0 4px 0 #bf360c;
-    }
+    .btn-audio { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 12px; font-family: 'Mali'; font-weight: bold; font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 0 #bf360c; }
 
-    /* ส่วนออเดอร์ใหม่ */
-    .section-title {
-      font-size: 1.4rem;
-      margin: 20px 0 10px;
-      color: var(--primary);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
+    /* ออเดอร์ใหม่ */
+    .section-title { font-size: 1.4rem; margin: 20px 0 10px; color: var(--primary); display: flex; align-items: center; gap: 10px; }
     .order-list { display: flex; flex-direction: column; gap: 15px; }
+    .order-card { background: var(--card-bg); color: #222; border-radius: 20px; padding: 20px; border-left: 12px solid var(--primary); box-shadow: 0 6px 15px rgba(0,0,0,0.3); animation: popIn 0.4s ease-out; }
+    .items-list { list-style: none; margin: 15px 0; font-size: 1.6rem; font-weight: 700; line-height: 1.4; }
+    .items-list li { padding: 8px 0; border-bottom: 1px dashed #ddd; }
+    .total-price { text-align: right; font-size: 1.8rem; color: #E91E63; font-weight: bold; margin-bottom: 15px; }
+    .btn-done { width: 100%; padding: 18px; background: var(--success); color: white; border: none; border-radius: 15px; font-family: 'Mali'; font-weight: bold; font-size: 1.4rem; cursor: pointer; }
 
-    .order-card {
-      background: var(--card-bg);
-      color: #222;
-      border-radius: 20px;
-      padding: 20px;
-      border-left: 12px solid var(--primary);
-      box-shadow: 0 6px 15px rgba(0,0,0,0.3);
-      animation: popIn 0.4s ease-out;
-    }
-
-    .order-info { display: flex; justify-content: space-between; margin-bottom: 10px; color: #666; font-size: 0.9rem; }
-
-    .items-list {
-      list-style: none;
-      margin: 15px 0;
-      font-size: 1.6rem; /* ตัวอักษรรายการอาหารใหญ่มาก */
-      font-weight: 700;
-      line-height: 1.4;
-    }
-    .items-list li {
-      padding: 8px 0;
-      border-bottom: 1px dashed #ddd;
-    }
-    .items-list li:last-child { border-bottom: none; }
-
-    .total-price {
-      text-align: right;
-      font-size: 1.8rem;
-      color: #E91E63;
-      font-weight: bold;
-      margin-bottom: 15px;
-    }
-
-    .btn-done {
-      width: 100%;
-      padding: 18px;
-      background: var(--success);
-      color: white;
-      border: none;
-      border-radius: 15px;
-      font-family: 'Mali';
-      font-weight: bold;
-      font-size: 1.4rem; /* ปุ่มกดขนาดใหญ่มาก */
-      cursor: pointer;
-    }
-
-    /* ประวัติการสั่งซื้อ (ส่วนท้าย) */
-    .history-section {
-      margin-top: 40px;
-      background: #333;
-      padding: 15px;
-      border-radius: 20px;
-    }
-    .history-item {
-      background: #444;
-      margin-bottom: 10px;
-      padding: 12px;
-      border-radius: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 1rem;
-    }
+    /* ส่วนประวัติและยอดรวม */
+    .history-section { margin-top: 40px; background: #333; padding: 15px; border-radius: 20px; border: 1px solid #444; }
+    .daily-summary { background: #1b5e20; color: #fff; padding: 15px; border-radius: 15px; text-align: center; margin-bottom: 15px; border: 2px solid #81C784; }
+    .daily-summary .label { font-size: 1.1rem; opacity: 0.9; }
+    .daily-summary .amount { font-size: 2.2rem; font-weight: bold; }
+    
+    .history-item { background: #444; margin-bottom: 10px; padding: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 1rem; border-left: 5px solid #81C784; }
     .history-item .details { flex: 1; margin-right: 10px; }
-    .history-item .price { color: #81C784; font-weight: bold; }
+    .history-item .price { color: #81C784; font-weight: bold; font-size: 1.1rem; }
 
-    @keyframes popIn {
-      from { opacity: 0; transform: scale(0.9); }
-      to { opacity: 1; transform: scale(1); }
-    }
+    @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
   </style>
+  <script>
+    if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); }); }
+  </script>
 </head>
 <body>
 
@@ -150,18 +55,22 @@
   </div>
 
   <h2 class="section-title">🔔 ออเดอร์ใหม่</h2>
-  <div id="orderList" class="order-list">
-    </div>
+  <div id="orderList" class="order-list">กำลังโหลด...</div>
 
   <div class="history-section">
-    <h2 style="color:#81C784; margin-bottom:15px;">✅ ประวัติล่าสุด</h2>
+    <div class="daily-summary">
+      <div class="label">💰 ยอดขายรวมวันนี้</div>
+      <div class="amount"><span id="dailyTotal">0</span>.-</div>
+    </div>
+    
+    <h2 style="color:#81C784; margin-bottom:15px; font-size: 1.2rem;">✅ รายการที่ขายแล้ววันนี้</h2>
     <div id="historyList">
       </div>
   </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-  import { getFirestore, collection, query, where, onSnapshot, updateDoc, doc, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+  import { getFirestore, collection, query, where, onSnapshot, updateDoc, doc, orderBy, Timestamp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBCR9k_D1GiVugnFqsIxf33Ge96rCmhbZs",
@@ -188,9 +97,7 @@
     if(!audioEnabled) return;
     const text = `มี ออ เดอร์ ใหม่ . . . ราย การ คือ . . . ${items.join(" . . . ")}`;
     const msg = new SpeechSynthesisUtterance(text);
-    msg.lang = 'th-TH'; 
-    msg.rate = 0.75; // ช้าลงอีกนิดเพื่อความชัดเจน
-    window.speechSynthesis.speak(msg);
+    msg.lang = 'th-TH'; msg.rate = 0.75; window.speechSynthesis.speak(msg);
   }
 
   // ดึงออเดอร์ที่กำลังปรุง (Pending)
@@ -198,61 +105,59 @@
   onSnapshot(qPending, (snap) => {
     const list = document.getElementById('orderList');
     list.innerHTML = '';
-    
-    // ตรวจสอบออเดอร์ใหม่เพื่ออ่านออกเสียง
-    snap.docChanges().forEach(change => { 
-      if(change.type === 'added') speakOrder(change.doc.data().items); 
-    });
-
+    snap.docChanges().forEach(change => { if(change.type === 'added') speakOrder(change.doc.data().items); });
     snap.forEach(d => {
       const o = d.data();
       const timeStr = o.createdAt?.toDate().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) || '--:--';
       const card = document.createElement('div');
       card.className = 'order-card';
-      card.innerHTML = `
-        <div class="order-info">
-          <span>🕒 เวลาสั่ง: ${timeStr}</span>
-          <span style="font-weight:bold; color:var(--primary);">#ออเดอร์ใหม่</span>
-        </div>
-        <ul class="items-list">
-          ${o.items.map(i => `<li>${i}</li>`).join('')}
-        </ul>
+      card.innerHTML = `<div class="order-info"><span>🕒 ${timeStr}</span> <span style="font-weight:bold; color:var(--primary);">#รอปรุง</span></div>
+        <ul class="items-list">${o.items.map(i => `<li>${i}</li>`).join('')}</ul>
         <div class="total-price">${o.total.toLocaleString()}.-</div>
-        <button class="btn-done" onclick="done('${d.id}')">ทำเสร็จ / รับเงินแล้ว ✅</button>
-      `;
+        <button class="btn-done" onclick="done('${d.id}')">เสร็จสิ้น / รับเงิน ✅</button>`;
       list.appendChild(card);
     });
-    
-    if(snap.empty) {
-      list.innerHTML = '<div style="text-align:center; padding:40px; color:#666;">ยังไม่มีออเดอร์ค้าง</div>';
-    }
+    if(snap.empty) list.innerHTML = '<div style="text-align:center; padding:30px; color:#666;">ยังไม่มีออเดอร์ค้าง</div>';
   });
 
-  // ดึงประวัติที่เสร็จแล้ว 10 รายการล่าสุด
-  const qHistory = query(collection(db, "orders"), where("status", "==", "completed"), orderBy("createdAt", "desc"), limit(10));
+  // คำนวณเวลาเริ่มต้นของวันนี้ (00:00:00)
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+  const startTimestamp = Timestamp.fromDate(startOfDay);
+
+  // ดึงประวัติที่เสร็จแล้ว "เฉพาะของวันนี้"
+  const qHistory = query(
+    collection(db, "orders"), 
+    where("status", "==", "completed"), 
+    where("createdAt", ">=", startTimestamp),
+    orderBy("createdAt", "desc")
+  );
+
   onSnapshot(qHistory, (snap) => {
     const historyList = document.getElementById('historyList');
+    const dailyTotalEl = document.getElementById('dailyTotal');
     historyList.innerHTML = '';
+    let totalSum = 0;
+
     snap.forEach(d => {
       const o = d.data();
+      totalSum += o.total;
       const timeStr = o.createdAt?.toDate().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) || '--:--';
       const div = document.createElement('div');
       div.className = 'history-item';
       div.innerHTML = `
-        <div class="details">
-          <small style="color:#aaa;">${timeStr}</small><br>
-          ${o.items.join(', ')}
-        </div>
-        <div class="price">${o.total}.-</div>
+        <div class="details"><small style="color:#aaa;">${timeStr}</small><br>${o.items.join(', ')}</div>
+        <div class="price">${o.total.toLocaleString()}.-</div>
       `;
       historyList.appendChild(div);
     });
+
+    dailyTotalEl.innerText = totalSum.toLocaleString();
+    if(snap.empty) historyList.innerHTML = '<div style="text-align:center; padding:10px; color:#888; font-size:0.9rem;">ยังไม่มีรายการขายของวันนี้</div>';
   });
 
   window.done = async (id) => { 
-    if(confirm('ยืนยันว่าได้รับเงินและทำเสร็จแล้ว?')) {
-      await updateDoc(doc(db, "orders", id), { status: 'completed' }); 
-    }
+    if(confirm('ยืนยันว่าได้รับเงินแล้ว?')) { await updateDoc(doc(db, "orders", id), { status: 'completed' }); }
   };
 </script>
 </body>
