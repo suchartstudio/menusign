@@ -1,9 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700&display=swap');
 
 :root {
-  --primary-color: #FF5722; /* สีส้มสดใส */
+  --primary-color: #FF5722; 
   --secondary-color: #FFC107;
-  --text-color: #333333;
+  --text-color: #222222;
   --bg-color: #FFFDF7;
 }
 
@@ -13,10 +13,10 @@ body {
   font-family: 'Mali', cursive;
   background-color: var(--bg-color);
   color: var(--text-color);
-  overflow: hidden; /* ปิด Scrollbar สำหรับหน้าจอทีวี */
+  overflow: hidden;
 }
 
-/* --- TV Display (index.html) --- */
+/* --- TV Display --- */
 .tv-container {
   width: 100vw;
   height: 100vh;
@@ -26,7 +26,7 @@ body {
 }
 
 .category-header {
-  height: 10vh;
+  height: 8vh;
   font-size: 5vw;
   font-weight: 700;
   color: var(--primary-color);
@@ -40,26 +40,36 @@ body {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-around; /* กระจาย 5 เมนูให้เต็มพื้นที่ */
+  justify-content: space-between; /* กระจาย 4 เมนูให้เต็มจอ */
+  padding-bottom: 2vh;
 }
 
-/* แทนที่ .menu-row, .menu-img-wrapper, .menu-name, .menu-price เดิมด้วยชุดนี้ */
-
+/* กรอบเมนูแต่ละแถว */
 .menu-row {
   display: flex;
   align-items: center;
-  height: 16vh; /* เพิ่มความสูงของแถวให้รองรับรูปใหญ่ขึ้น */
+  height: 18vh; /* ขยายความสูงสำหรับ 4 เมนู/หน้า */
+  border-radius: 25px; /* ขอบมน */
+  padding: 0 2vw;
+  box-shadow: 0 8px 15px rgba(0,0,0,0.1);
   animation: fadeIn 1s ease-in-out;
 }
 
+/* ชุดสีสันสดใสสลับกัน */
+.bg-color-0 { background-color: #FFE082; border: 5px solid #FFB300; }
+.bg-color-1 { background-color: #B2DFDB; border: 5px solid #009688; }
+.bg-color-2 { background-color: #FFCCBC; border: 5px solid #FF5722; }
+.bg-color-3 { background-color: #C5CAE9; border: 5px solid #3F51B5; }
+
 .menu-img-wrapper {
-  width: 15vh; /* ขยายขนาดวงกลมรูปภาพให้ใหญ่เต็มตา */
+  width: 15vh; 
   height: 15vh;
   flex-shrink: 0;
   border-radius: 50%;
-  border: 8px solid var(--primary-color); /* เพิ่มความหนาของขอบเส้นให้ชัดขึ้น */
+  border: 6px solid #FFF;
   overflow: hidden;
-  box-shadow: 0 6px 12px rgba(0,0,0,0.15); /* เพิ่มเงาให้รูปดูมีมิติเด้งออกมา */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  background-color: #FFF;
 }
 
 .menu-img-wrapper img {
@@ -68,45 +78,53 @@ body {
   object-fit: cover;
 }
 
+/* แก้ปัญหาวรรณยุกต์จมด้วย line-height และ padding */
 .menu-name {
   flex-grow: 1;
-  font-size: 4vw; /* ขยายฟอนต์ชื่อเมนูให้ใหญ่ขึ้น */
+  font-size: 4.5vw; 
   font-weight: 700;
-  padding-left: 3vw;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  padding-left: 2vw;
+  line-height: 1.5; /* ป้องกันวรรณยุกต์และสระจม */
+  display: flex;
+  align-items: center;
 }
 
 .menu-price {
-  font-size: 5vw; /* ขยายฟอนต์ราคาให้ใหญ่และชัดเจนที่สุด */
+  font-size: 5.5vw; 
   font-weight: 700;
   color: #E91E63;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0.5vh 2vw;
+  border-radius: 15px;
+  border: 3px dashed #E91E63;
 }
+
+/* อนิเมชั่น Emoji ดุ๊กดิ๊ก */
+.emoji-icon {
+  font-size: 5vw;
+  margin-right: 2vw;
+  display: inline-block;
+  animation: wiggle 1.5s infinite ease-in-out;
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-10deg) scale(1); }
+  50% { transform: rotate(15deg) scale(1.2); }
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* --- Admin Form (admin.html) --- */
-.admin-container {
-  padding: 2rem;
-  max-width: 600px;
-  margin: auto;
-}
+/* --- Admin UI --- */
+.admin-container { padding: 2rem; max-width: 800px; margin: auto; }
 .admin-container input, .admin-container select, .admin-container button {
-  width: 100%;
-  padding: 15px;
-  margin-bottom: 15px;
-  font-family: 'Mali', cursive;
-  font-size: 1.2rem;
-  border: 2px solid #ccc;
-  border-radius: 8px;
+  width: 100%; padding: 15px; margin-bottom: 15px; font-family: 'Mali', cursive; font-size: 1.2rem; border: 2px solid #ccc; border-radius: 8px;
 }
-.admin-container button {
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
-}
+.admin-container button { background-color: var(--primary-color); color: white; border: none; font-weight: bold; cursor: pointer; }
+.cancel-btn { background-color: #9e9e9e !important; display: none; }
+.menu-list-admin { margin-top: 2rem; }
+.menu-item-admin { display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ccc; font-size: 1.2rem;}
+.menu-item-admin img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-right: 15px; }
+.edit-btn { background-color: #FFC107 !important; color: #000 !important; width: auto !important; padding: 10px 20px !important; margin: 0 !important; }
