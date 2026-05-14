@@ -7,16 +7,22 @@
   <style>
     body { font-family: 'Mali', cursive; background: #263238; color: white; padding: 20px; }
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-    .card { background: white; color: #333; border-radius: 15px; padding: 15px; position: relative; }
-    .time { font-size: 0.8rem; color: #666; }
-    ul { margin: 10px 0; padding-left: 20px; font-size: 1.2rem; }
-    .done-btn { width: 100%; padding: 10px; background: #4CAF50; color: white; border: none; border-radius: 10px; cursor: pointer; font-family: 'Mali'; }
+    .card { background: white; color: #333; border-radius: 15px; padding: 15px; position: relative; border-left: 10px solid #FF5722; animation: fadeIn 0.5s; }
+    .time { font-size: 0.85rem; color: #666; margin-bottom: 5px; }
+    ul { margin: 10px 0; padding-left: 20px; font-size: 1.3rem; font-weight: bold; }
+    li { margin-bottom: 5px; border-bottom: 1px dashed #eee; padding-bottom: 3px; }
+    .done-btn { width: 100%; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 10px; cursor: pointer; font-family: 'Mali'; font-weight: bold; font-size: 1rem; margin-top: 10px; }
+    .total-price { text-align: right; font-weight: bold; color: #E91E63; font-size: 1.5rem; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
-<h1>🔔 ออเดอร์เข้าใหม่ (Kitchen)</h1>
-<button onclick="enableAudio()" id="audioBtn" style="background:#FF5722; color:white; border:none; padding:10px 20px; border-radius:10px; margin-bottom:20px;">🔊 เปิดระบบเสียงแจ้งเตือน</button>
-<div class="grid" id="orderGrid"></div>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h1>🔔 ออเดอร์เข้าใหม่ (Kitchen)</h1>
+    <button onclick="enableAudio()" id="audioBtn" style="background:#FF5722; color:white; border:none; padding:12px 25px; border-radius:15px; font-family:'Mali'; cursor:pointer; font-weight:bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">🔊 เปิดระบบเสียงแจ้งเตือน</button>
+  </div>
+  
+  <div class="grid" id="orderGrid"></div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
@@ -35,33 +41,75 @@
   const db = getFirestore(app);
   let audioEnabled = false;
 
-  window.enableAudio = () => { audioEnabled = true; document.getElementById('audioBtn').innerText = "🔊 ระบบเสียงพร้อมใช้งาน"; };
+  window.enableAudio = () => { 
+    audioEnabled = true; 
+    document.getElementById('audioBtn').style.background = "#4CAF50";
+    document.getElementById('audioBtn').innerText = "✅ ระบบเสียงทำงานแล้ว"; 
+    
+    // ทดสอบเสียงทันทีที่กดเปิด
+    const testMsg = new SpeechSynthesisUtterance("ระบบเสียงพร้อมประกาศแล้วค่ะ");
+    testMsg.lang = 'th-TH';
+    testMsg.rate = 0.8;
+    window.speechSynthesis.speak(testMsg);
+  };
 
-  function speak(txt) {
+  function speakOrder(items) {
     if(!audioEnabled) return;
-    const msg = new SpeechSynthesisUtterance("มีออเดอร์ใหม่ " + txt);
-    msg.lang = 'th-TH'; window.speechSynthesis.speak(msg);
+
+    // เตรียมข้อความโดยเพิ่มเว้นวรรคระหว่างคำเพื่อให้ AI เว้นจังหวะ
+    // เช่น "รายการ มี ดังนี้ ... ส้มตำ ... ยำปูม้า"
+    const itemListText = items.join(" . . . "); // ใช้จุดและเว้นวรรคช่วยสร้างจังหวะหยุดพัก
+    const fullText = `มีออเดอร์ใหม่ . . รายการคือ . . ${itemListText}`;
+
+    const msg = new SpeechSynthesisUtterance(fullText);
+    msg.lang = 'th-TH';
+    
+    // --- ปรับแต่งความเร็วและจังหวะที่นี่ ---
+    msg.rate = 0.8;  // ความเร็ว (0.1 - 10) : 0.8 คือช้ากว่าปกติเล็กน้อยเพื่อให้ชัดเจน
+    msg.pitch = 1.0; // ระดับเสียงสูงต่ำ (0 - 2)
+    msg.volume = 1.0; // ความดัง (0 - 1)
+
+    window.speechSynthesis.speak(msg);
   }
 
+  // ดึงข้อมูล Real-time
   const q = query(collection(db, "orders"), where("status", "==", "pending"), orderBy("createdAt", "asc"));
+  
   onSnapshot(q, (snap) => {
     const area = document.getElementById('orderGrid');
     area.innerHTML = '';
-    snap.docChanges().forEach(change => { if(change.type === 'added') speak(change.doc.data().items.join(', ')); });
+    
+    // ตรวจสอบออเดอร์ที่เพิ่มมาใหม่เพื่ออ่านออกเสียง
+    snap.docChanges().forEach(change => { 
+      if(change.type === 'added') {
+        const data = change.doc.data();
+        // เรียกฟังก์ชันเสียง
+        speakOrder(data.items);
+      } 
+    });
+
+    // แสดงผลรายการบนหน้าจอ
     snap.forEach(d => {
       const o = d.data();
-      const div = document.createElement('div'); div.className = 'card';
+      const div = document.createElement('div'); 
+      div.className = 'card';
+      const timeStr = o.createdAt?.toDate().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) || 'เมื่อครู่';
+      
       div.innerHTML = `
-        <div class="time">สั่งเมื่อ: ${o.createdAt?.toDate().toLocaleTimeString() || 'เมื่อครู่'}</div>
+        <div class="time">🕒 เวลาสั่ง: ${timeStr}</div>
         <ul>${o.items.map(i => `<li>${i}</li>`).join('')}</ul>
-        <hr><div style="text-align:right; font-weight:bold; color:red; font-size:1.5rem; margin-bottom:10px;">${o.total}.-</div>
-        <button class="done-btn" onclick="done('${d.id}')">เสร็จสิ้น / จ่ายเงินแล้ว</button>
+        <div class="total-price">${o.total.toLocaleString()}.-</div>
+        <button class="done-btn" onclick="done('${d.id}')">ทำเสร็จแล้ว / จ่ายเงินแล้ว</button>
       `;
       area.appendChild(div);
     });
   });
 
-  window.done = async (id) => { await updateDoc(doc(db, "orders", id), { status: 'completed' }); };
+  window.done = async (id) => { 
+    if(confirm('ยืนยันออเดอร์เสร็จสิ้น?')) {
+      await updateDoc(doc(db, "orders", id), { status: 'completed' }); 
+    }
+  };
 </script>
 </body>
 </html>
