@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - จัดการเมนูอาหาร</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="admin-container">
+    <h2>เพิ่มเมนูอาหารใหม่</h2>
+    <form id="addMenuForm">
+      <input type="text" id="category" placeholder="ชื่อหมวดหมู่ (เช่น อาหารจานเดียว, เครื่องดื่ม)" required>
+      <input type="text" id="name" placeholder="ชื่อเมนู" required>
+      <input type="number" id="price" placeholder="ราคา" required>
+      <input type="file" id="imageFile" accept="image/*" required>
+      <button type="submit" id="submitBtn">บันทึกข้อมูลเมนู</button>
+    </form>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+
+    // Firebase Configuration ของคุณ
+    const firebaseConfig = {
+      apiKey: "AIzaSyBCR9k_D1GiVugnFqsIxf33Ge96rCmhbZs",
+      authDomain: "signage-eac53.firebaseapp.com",
+      projectId: "signage-eac53",
+      storageBucket: "signage-eac53.firebasestorage.app",
+      messagingSenderId: "184834384558",
+      appId: "1:184834384558:web:227f079ed8c161ca36c33f"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Cloudinary Configuration ของคุณ
+    const CLOUD_NAME = "dk0ypev4m"; 
+    const UPLOAD_PRESET = "khonkaen_preset"; 
+
+    document.getElementById('addMenuForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      btn.innerText = "กำลังอัปโหลดรูปภาพ...";
+      btn.disabled = true;
+
+      const file = document.getElementById('imageFile').files[0];
+      const category = document.getElementById('category').value;
+      const name = document.getElementById('name').value;
+      const price = document.getElementById('price').value;
+
+      try {
+        // 1. อัปโหลดเข้า Cloudinary
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", UPLOAD_PRESET);
+
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+          method: "POST",
+          body: formData
+        });
+        
+        if (!res.ok) {
+            throw new Error("อัปโหลดรูปภาพไม่สำเร็จ กรุณาตรวจสอบการตั้งค่า Unsigned Upload ใน Cloudinary");
+        }
+        
+        const cloudData = await res.json();
+        const imageUrl = cloudData.secure_url;
+
+        // 2. บันทึกลง Firebase Firestore
+        btn.innerText = "กำลังบันทึกลงฐานข้อมูล...";
+        await addDoc(collection(db, "menus"), {
+          category: category,
+          name: name,
+          price: parseInt(price),
+          imageUrl: imageUrl,
+          createdAt: serverTimestamp()
+        });
+
+        alert("เพิ่มเมนูเรียบร้อยแล้ว!");
+        document.getElementById('addMenuForm').reset();
+        
+      } catch (error) {
+        console.error("Error:", error);
+        alert("เกิดข้อผิดพลาด: " + error.message);
+      } finally {
+        btn.innerText = "บันทึกข้อมูลเมนู";
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

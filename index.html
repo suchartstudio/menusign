@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TV Menu Display</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="tv-container">
+    <div class="category-header" id="categoryName">กำลังโหลดข้อมูล...</div>
+    <div class="menu-list" id="menuList">
+      <!-- ข้อมูลเมนูจะถูก Render ที่นี่ -->
+    </div>
+  </div>
+
+  <!-- Firebase SDK (Compat Version ใช้งานง่ายกับ Vanilla JS) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+
+  <script>
+    // 1. ใส่ Config ของ Firebase
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    let allMenus = [];
+    let currentIndex = 0;
+    const itemsPerPage = 5;
+
+    // ดึงข้อมูลเมนู
+    async function fetchMenus() {
+      const snapshot = await db.collection('menus').get();
+      allMenus = snapshot.docs.map(doc => doc.data());
+      
+      if(allMenus.length > 0) {
+        renderDisplay();
+        // สลับหน้าจอทุกๆ 10 วินาที
+        setInterval(renderDisplay, 10000); 
+      } else {
+        document.getElementById('categoryName').innerText = "ยังไม่มีข้อมูลเมนู";
+      }
+    }
+
+    // ฟังก์ชันวาดหน้าจอ
+    function renderDisplay() {
+      const menuListDiv = document.getElementById('menuList');
+      menuListDiv.innerHTML = ''; // ล้างค่าเดิม
+      
+      // หาชุดข้อมูล 5 รายการปัจจุบัน
+      const currentItems = allMenus.slice(currentIndex, currentIndex + itemsPerPage);
+      
+      // สมมติว่าดึงชื่อหมวดหมู่จากเมนูแรกของหน้า
+      if(currentItems.length > 0) {
+        document.getElementById('categoryName').innerText = `หมวดหมู่: ${currentItems[0].category}`;
+      }
+
+      currentItems.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'menu-row';
+        row.innerHTML = `
+          <div class="menu-img-wrapper">
+            <img src="${item.imageUrl}" alt="${item.name}">
+          </div>
+          <div class="menu-name">${item.name}</div>
+          <div class="menu-price">${item.price}.-</div>
+        `;
+        menuListDiv.appendChild(row);
+      });
+
+      // อัปเดต Index สำหรับรอบถัดไป
+      currentIndex += itemsPerPage;
+      if (currentIndex >= allMenus.length) {
+        currentIndex = 0; // วนลูปกลับไปหน้าแรก
+      }
+    }
+
+    fetchMenus();
+  </script>
+</body>
+</html>
