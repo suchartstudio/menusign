@@ -2,218 +2,139 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>Admin - จัดการเมนูอาหาร</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Admin - จัดการเมนูยำร่วมจิตร</title>
+  <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Mali', cursive; background: #f4f4f4; padding: 20px; }
+    .admin-container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    h2 { color: #FF5722; text-align: center; margin-bottom: 20px; }
+    input, select, button { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ddd; font-family: 'Mali'; font-size: 1rem; }
+    button { background: #FF5722; color: white; border: none; font-weight: bold; cursor: pointer; }
+    button:hover { background: #E64A19; }
+    .cancel-btn { background: #9E9E9E; display: none; }
+    .menu-item-admin { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #eee; justify-content: space-between; }
+    .menu-item-admin img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; margin-right: 15px; border: 2px solid #FF5722; }
+    .edit-btn { width: auto; background: #FFC107; color: black; padding: 5px 15px; }
+    #newCategoryInput { border: 2px solid #FFC107; background: #FFFDE7; }
+  </style>
 </head>
 <body>
 
-  <div class="admin-container">
-    <h2 id="formTitle">เพิ่มเมนูอาหารใหม่</h2>
-    <form id="addMenuForm">
-      
-      <select id="categorySelect" required>
-        <option value="" disabled selected>กำลังโหลดหมวดหมู่...</option>
-      </select>
-      <input type="text" id="newCategoryInput" placeholder="พิมพ์ชื่อหมวดหมู่ใหม่..." style="display: none;">
+<div class="admin-container">
+  <h2 id="formTitle">🍳 เพิ่มเมนูอาหารใหม่</h2>
+  <form id="addMenuForm">
+    <select id="categorySelect" required><option value="">กำลังโหลดหมวดหมู่...</option></select>
+    <input type="text" id="newCategoryInput" placeholder="พิมพ์ชื่อหมวดหมู่ใหม่..." style="display:none;">
+    <input type="text" id="name" placeholder="ชื่อเมนู" required>
+    <input type="number" id="price" placeholder="ราคา" required>
+    <label style="font-size: 0.9rem; color: #666;">รูปภาพอาหาร:</label>
+    <input type="file" id="imageFile" accept="image/*">
+    <button type="submit" id="submitBtn">บันทึกข้อมูลเมนู</button>
+    <button type="button" id="cancelBtn" class="cancel-btn">ยกเลิกการแก้ไข</button>
+  </form>
 
-      <input type="text" id="name" placeholder="ชื่อเมนู" required>
-      <input type="number" id="price" placeholder="ราคา" required>
-      
-      <!-- เอา required ออก เพื่อให้ตอนแก้ไขไม่ต้องบังคับอัปโหลดรูปใหม่ -->
-      <label for="imageFile" id="imageLabel">เลือกรูปภาพอาหาร (หากแก้ไขและไม่เลือกรูปใหม่ จะใช้รูปเดิม):</label>
-      <input type="file" id="imageFile" accept="image/*">
-      
-      <button type="submit" id="submitBtn">บันทึกข้อมูลเมนู</button>
-      <button type="button" id="cancelBtn" class="cancel-btn">ยกเลิกการแก้ไข</button>
-    </form>
-
-    <div class="menu-list-admin" id="adminMenuList">
-      <h3>รายการอาหารทั้งหมด (กำลังโหลด...)</h3>
-    </div>
+  <div id="adminMenuList" style="margin-top: 30px;">
+    <h3>📋 รายการเมนูทั้งหมด</h3>
+    <div id="listContainer">กำลังโหลดรายการ...</div>
   </div>
+</div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, updateDoc, doc, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, updateDoc, doc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBCR9k_D1GiVugnFqsIxf33Ge96rCmhbZs",
-      authDomain: "signage-eac53.firebaseapp.com",
-      projectId: "signage-eac53",
-      storageBucket: "signage-eac53.firebasestorage.app",
-      messagingSenderId: "184834384558",
-      appId: "1:184834384558:web:227f079ed8c161ca36c33f"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyBCR9k_D1GiVugnFqsIxf33Ge96rCmhbZs",
+    authDomain: "signage-eac53.firebaseapp.com",
+    projectId: "signage-eac53",
+    storageBucket: "signage-eac53.firebasestorage.app",
+    messagingSenderId: "184834384558",
+    appId: "1:184834384558:web:227f079ed8c161ca36c33f"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const CLOUD_NAME = "dk0ypev4m"; 
+  const UPLOAD_PRESET = "khonkaen_preset"; 
 
-    const CLOUD_NAME = "dk0ypev4m"; 
-    const UPLOAD_PRESET = "khonkaen_preset"; 
+  let editingId = null;
+  let currentImageUrl = '';
 
-    // ตัวแปรสำหรับระบบแก้ไข
-    let editingId = null;
-    let currentImageUrl = '';
+  async function loadData() {
+    const querySnapshot = await getDocs(collection(db, "menus"));
+    const categories = new Set();
+    let html = '';
+    querySnapshot.forEach((document) => {
+      const data = document.data();
+      categories.add(data.category);
+      const itemData = encodeURIComponent(JSON.stringify({...data, id: document.id}));
+      html += `<div class="menu-item-admin">
+        <div style="display:flex;align-items:center;"><img src="${data.imageUrl}">
+        <div><b>${data.name}</b><br><small>${data.category} | ${data.price}.-</small></div></div>
+        <button class="edit-btn" onclick="editMenu('${itemData}')">แก้ไข</button>
+      </div>`;
+    });
+    document.getElementById('listContainer').innerHTML = html;
+    
+    let catHtml = '<option value="" disabled selected>-- เลือกหมวดหมู่ --</option>';
+    categories.forEach(c => catHtml += `<option value="${c}">${c}</option>`);
+    catHtml += '<option value="NEW" style="color:blue;">+ เพิ่มหมวดหมู่ใหม่...</option>';
+    document.getElementById('categorySelect').innerHTML = catHtml;
+  }
 
-    async function loadData() {
-      const catSelect = document.getElementById('categorySelect');
-      const adminMenuList = document.getElementById('adminMenuList');
-      
-      try {
-        const querySnapshot = await getDocs(collection(db, "menus"));
-        const categories = new Set();
-        let menuHtml = '<h3>รายการอาหารทั้งหมด</h3>';
-        
-        querySnapshot.forEach((document) => {
-          const data = document.data();
-          if (data.category) categories.add(data.category);
-          
-          // สร้างรายการเพื่อกดแก้ไข
-          const itemDataStr = encodeURIComponent(JSON.stringify({...data, id: document.id}));
-          menuHtml += `
-            <div class="menu-item-admin">
-              <div style="display:flex; align-items:center;">
-                <img src="${data.imageUrl}" alt="img">
-                <div>
-                  <strong>${data.name}</strong> (${data.price}.-)<br>
-                  <small style="color:gray;">หมวด: ${data.category}</small>
-                </div>
-              </div>
-              <button class="edit-btn" onclick="editMenu('${itemDataStr}')">แก้ไข</button>
-            </div>
-          `;
-        });
-        
-        // อัปเดต Dropdown หมวดหมู่
-        catSelect.innerHTML = '<option value="" disabled selected>-- เลือกหมวดหมู่อาหาร --</option>';
-        categories.forEach(cat => catSelect.innerHTML += `<option value="${cat}">${cat}</option>`);
-        catSelect.innerHTML += '<option value="NEW" style="color: blue; font-weight: bold;">+ เพิ่มหมวดหมู่ใหม่...</option>';
-        
-        // อัปเดตรายการด้านล่าง
-        adminMenuList.innerHTML = menuHtml;
-        
-      } catch (error) {
-        console.error("Error loading data", error);
+  window.editMenu = function(str) {
+    const data = JSON.parse(decodeURIComponent(str));
+    editingId = data.id; currentImageUrl = data.imageUrl;
+    document.getElementById('formTitle').innerText = "📝 แก้ไขเมนู";
+    document.getElementById('name').value = data.name;
+    document.getElementById('price').value = data.price;
+    document.getElementById('categorySelect').value = data.category;
+    document.getElementById('submitBtn').innerText = "อัปเดตข้อมูล";
+    document.getElementById('cancelBtn').style.display = "block";
+    window.scrollTo(0,0);
+  };
+
+  document.getElementById('cancelBtn').onclick = () => {
+    editingId = null; document.getElementById('addMenuForm').reset();
+    document.getElementById('formTitle').innerText = "🍳 เพิ่มเมนูอาหารใหม่";
+    document.getElementById('submitBtn').innerText = "บันทึกข้อมูลเมนู";
+    document.getElementById('cancelBtn').style.display = "none";
+  };
+
+  document.getElementById('categorySelect').onchange = function() {
+    document.getElementById('newCategoryInput').style.display = this.value === 'NEW' ? 'block' : 'none';
+  };
+
+  document.getElementById('addMenuForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true; btn.innerText = "กำลังบันทึก...";
+    
+    const file = document.getElementById('imageFile').files[0];
+    const category = document.getElementById('categorySelect').value === 'NEW' ? document.getElementById('newCategoryInput').value : document.getElementById('categorySelect').value;
+    
+    try {
+      let url = currentImageUrl;
+      if (file) {
+        const fd = new FormData(); fd.append("file", file); fd.append("upload_preset", UPLOAD_PRESET);
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: "POST", body: fd });
+        const d = await res.json(); url = d.secure_url;
       }
-    }
-
-    // เปิดให้ HTML เรียกใช้ฟังก์ชัน Edit ได้จาก onclick
-    window.editMenu = function(dataStr) {
-      const data = JSON.parse(decodeURIComponent(dataStr));
-      editingId = data.id;
-      currentImageUrl = data.imageUrl;
       
-      document.getElementById('formTitle').innerText = "แก้ไขเมนูอาหาร";
-      document.getElementById('submitBtn').innerText = "อัปเดตข้อมูล";
-      document.getElementById('cancelBtn').style.display = "block";
-      
-      document.getElementById('name').value = data.name;
-      document.getElementById('price').value = data.price;
-      document.getElementById('categorySelect').value = data.category;
-      
-      // ถ้าระบบไม่มีหมวดหมู่นั้นใน Dropdown ให้เด้งไปหมวดหมู่ใหม่
-      if (!document.getElementById('categorySelect').value) {
-        document.getElementById('categorySelect').value = "NEW";
-        document.getElementById('newCategoryInput').value = data.category;
-        document.getElementById('newCategoryInput').style.display = "block";
+      const payload = { category, name: document.getElementById('name').value, price: parseInt(document.getElementById('price').value), imageUrl: url };
+      if (editingId) {
+        await updateDoc(doc(db, "menus", editingId), payload);
       } else {
-        document.getElementById('newCategoryInput').style.display = "none";
+        await addDoc(collection(db, "menus"), { ...payload, createdAt: serverTimestamp() });
       }
+      alert("สำเร็จแล้ว!");
+      document.getElementById('cancelBtn').click();
+      loadData();
+    } catch (e) { alert("Error: " + e.message); }
+    btn.disabled = false;
+  };
 
-      window.scrollTo(0, 0); // เลื่อนจอขึ้นบนสุด
-    }
-
-    // ปุ่มยกเลิกการแก้ไข
-    document.getElementById('cancelBtn').addEventListener('click', () => {
-      editingId = null;
-      currentImageUrl = '';
-      document.getElementById('formTitle').innerText = "เพิ่มเมนูอาหารใหม่";
-      document.getElementById('submitBtn').innerText = "บันทึกข้อมูลเมนู";
-      document.getElementById('cancelBtn').style.display = "none";
-      document.getElementById('addMenuForm').reset();
-      document.getElementById('newCategoryInput').style.display = "none";
-      document.getElementById('imageFile').required = true; // บังคับอัปรูปตอนเพิ่มใหม่
-    });
-
-    document.getElementById('categorySelect').addEventListener('change', function() {
-      const newCatInput = document.getElementById('newCategoryInput');
-      if (this.value === 'NEW') {
-        newCatInput.style.display = 'block'; newCatInput.required = true;
-      } else {
-        newCatInput.style.display = 'none'; newCatInput.required = false; newCatInput.value = '';
-      }
-    });
-
-    document.getElementById('addMenuForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById('submitBtn');
-      btn.innerText = "กำลังประมวลผล...";
-      btn.disabled = true;
-
-      const file = document.getElementById('imageFile').files[0];
-      const name = document.getElementById('name').value;
-      const price = document.getElementById('price').value;
-      
-      const selectValue = document.getElementById('categorySelect').value;
-      const category = selectValue === 'NEW' ? document.getElementById('newCategoryInput').value : selectValue;
-
-      try {
-        let imageUrlToSave = currentImageUrl; // ค่าเริ่มต้นใช้รูปเดิมถ้าเป็นการแก้ไข
-
-        // ถ้ามีการอัปโหลดรูปใหม่ (ทั้งตอนสร้างใหม่ และแก้ไข)
-        if (file) {
-          btn.innerText = "กำลังอัปโหลดรูปภาพ...";
-          const formData = new FormData();
-          formData.append("file", file);
-          formData.append("upload_preset", UPLOAD_PRESET);
-
-          const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-            method: "POST", body: formData
-          });
-          if (!res.ok) throw new Error("อัปโหลดรูปภาพไม่สำเร็จ");
-          const cloudData = await res.json();
-          imageUrlToSave = cloudData.secure_url;
-        }
-
-        btn.innerText = "กำลังบันทึกลงฐานข้อมูล...";
-        
-        if (editingId) {
-          // โหมดแก้ไข (Update)
-          await updateDoc(doc(db, "menus", editingId), {
-            category: category,
-            name: name,
-            price: parseInt(price),
-            imageUrl: imageUrlToSave
-          });
-          alert("อัปเดตเมนูเรียบร้อยแล้ว!");
-        } else {
-          // โหมดเพิ่มใหม่ (Add)
-          await addDoc(collection(db, "menus"), {
-            category: category,
-            name: name,
-            price: parseInt(price),
-            imageUrl: imageUrlToSave,
-            createdAt: serverTimestamp()
-          });
-          alert("เพิ่มเมนูใหม่เรียบร้อยแล้ว!");
-        }
-        
-        // คืนค่ากลับเป็นโหมดปกติ
-        document.getElementById('cancelBtn').click(); 
-        loadData(); // รีเฟรชรายการ
-        
-      } catch (error) {
-        console.error("Error:", error);
-        alert("เกิดข้อผิดพลาด: " + error.message);
-      } finally {
-        btn.innerText = editingId ? "อัปเดตข้อมูล" : "บันทึกข้อมูลเมนู";
-        btn.disabled = false;
-      }
-    });
-
-    // เริ่มต้นทำงาน
-    document.getElementById('imageFile').required = true; // ตอนเริ่มบังคับให้ใส่รูป
-    loadData();
-  </script>
+  loadData();
+</script>
 </body>
 </html>
