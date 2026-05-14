@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ยำร่วมจิตร - Menu Display</title>
+  <title>ยำร่วมจิตร - Menu Display (By Category)</title>
   <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -40,7 +40,7 @@
     }
     .menu-list {
       flex-grow: 1; display: flex; flex-direction: column;
-      justify-content: space-between; padding-bottom: 2vh;
+      justify-content: flex-start; gap: 2vh; padding-bottom: 2vh;
     }
     .menu-row {
       display: flex; align-items: center; height: 18vh;
@@ -52,6 +52,7 @@
     .bg-color-1 { background-color: #B2DFDB; border: 5px solid #009688; }
     .bg-color-2 { background-color: #FFCCBC; border: 5px solid #FF5722; }
     .bg-color-3 { background-color: #C5CAE9; border: 5px solid #3F51B5; }
+    
     .menu-img-wrapper {
       width: 16vh; height: 16vh; flex-shrink: 0;
       border-radius: 50%; border: 6px solid #FFF;
@@ -59,6 +60,7 @@
       background-color: #FFF;
     }
     .menu-img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+    
     .menu-name {
       flex-grow: 1; font-size: 4.5vw; font-weight: 700;
       padding-left: 2vw; line-height: 1.5; display: flex; align-items: center;
@@ -108,19 +110,21 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    let allMenus = [];
-    let currentIndex = 0;
+    let displayPages = []; // เก็บข้อมูลที่แบ่งเป็นหน้าๆ แล้ว
+    let currentPageIndex = 0;
     const itemsPerPage = 4;
     const emojis = ['🍳', '🍲', '🍜', '🍛', '🍝', '🍕', '🍔', '🍟', '🍖', '🍤', '🥗', '🥘'];
 
     async function fetchMenus() {
       try {
         const querySnapshot = await getDocs(collection(db, "menus"));
-        allMenus = [];
-        querySnapshot.forEach((doc) => { allMenus.push(doc.data()); });
-        if(allMenus.length > 0) {
+        let rawData = [];
+        querySnapshot.forEach((doc) => { rawData.push(doc.data()); });
+
+        if(rawData.length > 0) {
+          preparePages(rawData);
           renderDisplay();
-          setInterval(renderDisplay, 10000); 
+          setInterval(renderDisplay, 10000); // สลับหน้าทุก 10 วินาที
         } else {
           document.getElementById('categoryName').innerText = "ยังไม่มีข้อมูลเมนู";
         }
@@ -129,17 +133,39 @@
       }
     }
 
+    // ฟังก์ชันจัดกลุ่มหมวดหมู่และแบ่งหน้า
+    function preparePages(data) {
+      // 1. จัดกลุ่มตามหมวดหมู่
+      const grouped = data.reduce((acc, item) => {
+        if (!acc[item.category]) acc[item.category] = [];
+        acc[item.category].push(item);
+        return acc;
+      }, {});
+
+      // 2. แบ่งรายการในแต่ละหมวดหมู่เป็นหน้าๆ (หน้าละ 4 รายการ)
+      displayPages = [];
+      Object.keys(grouped).forEach(catName => {
+        const itemsInCat = grouped[catName];
+        for (let i = 0; i < itemsInCat.length; i += itemsPerPage) {
+          displayPages.push({
+            category: catName,
+            items: itemsInCat.slice(i, i + itemsPerPage)
+          });
+        }
+      });
+    }
+
     function renderDisplay() {
       const menuListDiv = document.getElementById('menuList');
       const categoryNameEl = document.getElementById('categoryName');
-      menuListDiv.innerHTML = ''; 
       
-      const currentItems = allMenus.slice(currentIndex, currentIndex + itemsPerPage);
-      if(currentItems.length > 0) {
-        categoryNameEl.innerText = `📁 ${currentItems[0].category}`;
-      }
+      if (displayPages.length === 0) return;
+      
+      const currentPage = displayPages[currentPageIndex];
+      menuListDiv.innerHTML = ''; 
+      categoryNameEl.innerText = `📁 ${currentPage.category}`;
 
-      currentItems.forEach((item, index) => {
+      currentPage.items.forEach((item, index) => {
         const row = document.createElement('div');
         row.className = `menu-row bg-color-${index % 4}`;
         const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
@@ -151,9 +177,11 @@
         menuListDiv.appendChild(row);
       });
 
-      currentIndex += itemsPerPage;
-      if (currentIndex >= allMenus.length) currentIndex = 0;
+      // เลื่อนหน้าถัดไป
+      currentPageIndex++;
+      if (currentPageIndex >= displayPages.length) currentPageIndex = 0;
     }
+
     fetchMenus();
   </script>
 </body>
