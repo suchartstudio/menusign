@@ -1,65 +1,50 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TV Menu Display</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
-  <div class="tv-container">
-    <div class="category-header" id="categoryName">กำลังโหลดข้อมูล...</div>
-    <div class="menu-list" id="menuList">
-      <!-- ข้อมูลเมนูจะถูก Render ที่นี่ -->
-    </div>
-  </div>
-
-  <!-- Firebase SDK (Compat Version ใช้งานง่ายกับ Vanilla JS) -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-
-  <script>
-    // 1. ใส่ Config ของ Firebase
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
+      apiKey: "AIzaSyBCR9k_D1GiVugnFqsIxf33Ge96rCmhbZs",
+      authDomain: "signage-eac53.firebaseapp.com",
+      projectId: "signage-eac53",
+      storageBucket: "signage-eac53.firebasestorage.app",
+      messagingSenderId: "184834384558",
+      appId: "1:184834384558:web:227f079ed8c161ca36c33f"
     };
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
     let allMenus = [];
     let currentIndex = 0;
     const itemsPerPage = 5;
 
-    // ดึงข้อมูลเมนู
     async function fetchMenus() {
-      const snapshot = await db.collection('menus').get();
-      allMenus = snapshot.docs.map(doc => doc.data());
-      
-      if(allMenus.length > 0) {
-        renderDisplay();
-        // สลับหน้าจอทุกๆ 10 วินาที
-        setInterval(renderDisplay, 10000); 
-      } else {
-        document.getElementById('categoryName').innerText = "ยังไม่มีข้อมูลเมนู";
+      try {
+        const querySnapshot = await getDocs(collection(db, "menus"));
+        allMenus = [];
+        querySnapshot.forEach((doc) => {
+          allMenus.push(doc.data());
+        });
+        
+        if(allMenus.length > 0) {
+          renderDisplay();
+          setInterval(renderDisplay, 10000); // สลับหน้าจอทุกๆ 10 วินาที
+        } else {
+          document.getElementById('categoryName').innerText = "ยังไม่มีข้อมูลเมนู";
+        }
+      } catch (error) {
+        console.error("Error fetching menus: ", error);
+        document.getElementById('categoryName').innerText = "เกิดข้อผิดพลาดในการโหลดข้อมูล";
       }
     }
 
-    // ฟังก์ชันวาดหน้าจอ
     function renderDisplay() {
       const menuListDiv = document.getElementById('menuList');
-      menuListDiv.innerHTML = ''; // ล้างค่าเดิม
+      menuListDiv.innerHTML = ''; 
       
-      // หาชุดข้อมูล 5 รายการปัจจุบัน
       const currentItems = allMenus.slice(currentIndex, currentIndex + itemsPerPage);
       
-      // สมมติว่าดึงชื่อหมวดหมู่จากเมนูแรกของหน้า
       if(currentItems.length > 0) {
         document.getElementById('categoryName').innerText = `หมวดหมู่: ${currentItems[0].category}`;
       }
@@ -77,14 +62,11 @@
         menuListDiv.appendChild(row);
       });
 
-      // อัปเดต Index สำหรับรอบถัดไป
       currentIndex += itemsPerPage;
       if (currentIndex >= allMenus.length) {
-        currentIndex = 0; // วนลูปกลับไปหน้าแรก
+        currentIndex = 0; 
       }
     }
 
     fetchMenus();
   </script>
-</body>
-</html>
