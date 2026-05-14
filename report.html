@@ -1,0 +1,31 @@
+<div class="admin-container">
+    <h2>📊 รายงานยอดขาย</h2>
+    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+        <div class="report-box">วันนี้: <span id="daily-sales">0</span>.-</div>
+        <div class="report-box">เดือนนี้: <span id="monthly-sales">0</span>.-</div>
+        <div class="report-box">ปีนี้: <span id="yearly-sales">0</span>.-</div>
+    </div>
+    <canvas id="salesChart"></canvas> </div>
+
+<script type="module">
+    // โค้ดสำหรับดึงข้อมูล Orders ทั้งหมดมาคำนวณ
+    async function calculateReports() {
+        const querySnapshot = await getDocs(collection(db, "orders"));
+        let daily = 0, monthly = 0, yearly = 0;
+        const now = new Date();
+
+        querySnapshot.forEach(doc => {
+            const data = doc.data();
+            const date = data.createdAt.toDate();
+            
+            if(date.toDateString() === now.toDateString()) daily += data.totalPrice;
+            if(date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()) monthly += data.totalPrice;
+            if(date.getFullYear() === now.getFullYear()) yearly += data.totalPrice;
+        });
+
+        document.getElementById('daily-sales').innerText = daily.toLocaleString();
+        document.getElementById('monthly-sales').innerText = monthly.toLocaleString();
+        document.getElementById('yearly-sales').innerText = yearly.toLocaleString();
+    }
+    calculateReports();
+</script>

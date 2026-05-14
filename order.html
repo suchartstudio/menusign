@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>รายการสั่งซื้อ - ยำร่วมจิตร</title>
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Mali', cursive; background: #263238; color: white; margin: 0; padding: 20px; }
+        .order-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+        .order-card { background: white; color: #333; border-radius: 15px; padding: 15px; animation: bounceIn 0.5s; }
+        .order-id { background: #FF5722; color: white; padding: 5px 10px; border-radius: 10px; margin-bottom: 10px; display: inline-block; }
+        ul { padding-left: 20px; font-size: 1.2rem; }
+        @keyframes bounceIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            80% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+<h1>🔔 ออเดอร์ล่าสุด</h1>
+<div class="order-grid" id="order-container"></div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+    import { getFirestore, collection, query, where, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+
+    const firebaseConfig = { /* ใส่ Config */ };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // ระบบอ่านออกเสียง
+    function speak(text) {
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.lang = 'th-TH';
+        window.speechSynthesis.speak(msg);
+    }
+
+    const q = query(collection(db, "orders"), where("status", "==", "pending"), orderBy("createdAt", "desc"));
+
+    onSnapshot(q, (snapshot) => {
+        const container = document.getElementById('order-container');
+        container.innerHTML = '';
+        snapshot.docChanges().forEach((change) => {
+            if (change.type === "added") {
+                const data = change.doc.data();
+                // อ่านออกเสียงเฉพาะรายการใหม่ที่เข้ามา
+                speak("มีออเดอร์ใหม่: " + data.items.join(", "));
+            }
+        });
+
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            const itemsHtml = data.items.map(i => `<li>${i}</li>`).join('');
+            container.innerHTML += `
+                <div class="order-card">
+                    <div class="order-id">ใหม่!</div>
+                    <ul>${itemsHtml}</ul>
+                    <hr>
+                    <div style="text-align:right; font-weight:bold; color:red;">${data.totalPrice}.-</div>
+                </div>
+            `;
+        });
+    });
+</script>
+</body>
+</html>

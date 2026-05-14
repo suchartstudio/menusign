@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สั่งอาหาร - ยำร่วมจิตร</title>
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Mali', cursive; background: #fafafa; margin: 0; padding-bottom: 100px; }
+        header { background: #FF5722; color: white; padding: 15px; text-align: center; sticky; top: 0; z-index: 100; }
+        .section-title { padding: 15px; font-weight: bold; color: #FF5722; font-size: 1.2rem; }
+        
+        /* Grid เมนู */
+        .menu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
+        .menu-item { text-align: center; }
+        .img-circle { 
+            width: 80px; height: 80px; border-radius: 50%; border: 4px solid #FFC107; 
+            object-fit: cover; margin-bottom: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .menu-name { font-size: 0.8rem; height: 2.4em; overflow: hidden; }
+        .menu-price { font-weight: bold; color: #E91E63; }
+
+        /* แถบสรุปคำสั่งซื้อ */
+        .cart-bar { 
+            position: fixed; bottom: 0; width: 100%; background: white; 
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1); padding: 15px; 
+            display: flex; justify-content: space-between; align-items: center; box-sizing: border-box;
+        }
+        .btn-order { background: #FF5722; color: white; border: none; padding: 10px 20px; border-radius: 25px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<header>🏠 ยำร่วมจิตร - สั่งอาหาร</header>
+
+<div id="recommended-section">
+    <div class="section-title">✨ เมนูแนะนำ</div>
+    <div class="menu-grid" id="recommended-list"></div>
+</div>
+
+<div id="category-sections"></div>
+
+<div class="cart-bar">
+    <div>
+        <div>รวม: <span id="cart-count">0</span> รายการ</div>
+        <div style="font-size: 1.2rem; font-weight: bold; color: #E91E63;"><span id="cart-total">0</span>.-</div>
+    </div>
+    <button class="btn-order" onclick="submitOrder()">กดสั่งอาหาร 🚀</button>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+
+    const firebaseConfig = { /* ใส่ Config ของคุณ */ };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let cart = [];
+    let totalPrice = 0;
+
+    async function loadUserMenu() {
+        const querySnapshot = await getDocs(collection(db, "menus"));
+        const menus = [];
+        querySnapshot.forEach(doc => menus.push({...doc.data(), id: doc.id}));
+
+        // เมนูแนะนำ
+        const recList = document.getElementById('recommended-list');
+        menus.filter(m => m.isRecommended).forEach(m => {
+            recList.innerHTML += createMenuHTML(m);
+        });
+
+        // แบ่งหมวดหมู่
+        const cats = [...new Set(menus.map(m => m.category))];
+        const catContainer = document.getElementById('category-sections');
+        cats.forEach(cat => {
+            let html = `<div class="section-title">📁 ${cat}</div><div class="menu-grid">`;
+            menus.filter(m => m.category === cat).forEach(m => {
+                html += createMenuHTML(m);
+            });
+            html += `</div>`;
+            catContainer.innerHTML += html;
+        });
+    }
+
+    function createMenuHTML(m) {
+        return `
+            <div class="menu-item" onclick="addToCart('${m.name}', ${m.price})">
+                <img src="${m.imageUrl}" class="img-circle">
+                <div class="menu-name">${m.name}</div>
+                <div class="menu-price">${m.price}.-</div>
+            </div>
+        `;
+    }
+
+    window.addToCart = (name, price) => {
+        cart.push(name);
+        totalPrice += price;
+        document.getElementById('cart-count').innerText = cart.length;
+        document.getElementById('cart-total').innerText = totalPrice;
+    };
+
+    window.submitOrder = async () => {
+        if (cart.length === 0) return alert("กรุณาเลือกอาหารก่อนครับ");
+        try {
+            await addDoc(collection(db, "orders"), {
+                items: cart,
+                totalPrice: totalPrice,
+                status: 'pending',
+                createdAt: serverTimestamp()
+            });
+            alert("สั่งอาหารสำเร็จ! กรุณารอรับประทานครับ");
+            cart = []; totalPrice = 0;
+            document.getElementById('cart-count').innerText = 0;
+            document.getElementById('cart-total').innerText = 0;
+        } catch (e) { alert("เกิดข้อผิดพลาด"); }
+    };
+
+    loadUserMenu();
+</script>
+</body>
+</html>
