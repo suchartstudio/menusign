@@ -43,21 +43,23 @@ body {
   justify-content: space-around; /* กระจาย 5 เมนูให้เต็มพื้นที่ */
 }
 
+/* แทนที่ .menu-row, .menu-img-wrapper, .menu-name, .menu-price เดิมด้วยชุดนี้ */
+
 .menu-row {
   display: flex;
   align-items: center;
-  height: 15vh;
+  height: 16vh; /* เพิ่มความสูงของแถวให้รองรับรูปใหญ่ขึ้น */
   animation: fadeIn 1s ease-in-out;
 }
 
 .menu-img-wrapper {
-  width: 13vh;
-  height: 13vh;
+  width: 15vh; /* ขยายขนาดวงกลมรูปภาพให้ใหญ่เต็มตา */
+  height: 15vh;
   flex-shrink: 0;
   border-radius: 50%;
-  border: 6px solid var(--primary-color);
+  border: 8px solid var(--primary-color); /* เพิ่มความหนาของขอบเส้นให้ชัดขึ้น */
   overflow: hidden;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15); /* เพิ่มเงาให้รูปดูมีมิติเด้งออกมา */
 }
 
 .menu-img-wrapper img {
@@ -68,8 +70,8 @@ body {
 
 .menu-name {
   flex-grow: 1;
-  font-size: 3.5vw;
-  font-weight: 600;
+  font-size: 4vw; /* ขยายฟอนต์ชื่อเมนูให้ใหญ่ขึ้น */
+  font-weight: 700;
   padding-left: 3vw;
   white-space: nowrap;
   overflow: hidden;
@@ -77,11 +79,10 @@ body {
 }
 
 .menu-price {
-  font-size: 4.5vw;
+  font-size: 5vw; /* ขยายฟอนต์ราคาให้ใหญ่และชัดเจนที่สุด */
   font-weight: 700;
-  color: #E91E63; /* สีชมพูอมแดงเด่นๆ */
+  color: #E91E63;
 }
-
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
