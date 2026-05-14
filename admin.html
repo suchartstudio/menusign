@@ -10,19 +10,27 @@
   <div class="admin-container">
     <h2>เพิ่มเมนูอาหารใหม่</h2>
     <form id="addMenuForm">
-      <input type="text" id="category" placeholder="ชื่อหมวดหมู่ (เช่น อาหารจานเดียว, เครื่องดื่ม)" required>
+      
+      <!-- ส่วนที่เปลี่ยนใหม่: ตัวเลือกหมวดหมู่ -->
+      <select id="categorySelect" required>
+        <option value="" disabled selected>กำลังโหลดหมวดหมู่...</option>
+      </select>
+      
+      <!-- ช่องพิมพ์หมวดหมู่ใหม่ (จะซ่อนไว้ก่อน จะแสดงเมื่อเลือก "+ เพิ่มหมวดหมู่ใหม่") -->
+      <input type="text" id="newCategoryInput" placeholder="พิมพ์ชื่อหมวดหมู่ใหม่..." style="display: none;">
+
       <input type="text" id="name" placeholder="ชื่อเมนู" required>
       <input type="number" id="price" placeholder="ราคา" required>
       <input type="file" id="imageFile" accept="image/*" required>
+      
       <button type="submit" id="submitBtn">บันทึกข้อมูลเมนู</button>
     </form>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
-    // Firebase Configuration ของคุณ
     const firebaseConfig = {
       apiKey: "AIzaSyBCR9k_D1GiVugnFqsIxf33Ge96rCmhbZs",
       authDomain: "signage-eac53.firebaseapp.com",
@@ -32,13 +40,56 @@
       appId: "1:184834384558:web:227f079ed8c161ca36c33f"
     };
 
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Cloudinary Configuration ของคุณ
     const CLOUD_NAME = "dk0ypev4m"; 
     const UPLOAD_PRESET = "khonkaen_preset"; 
+
+    // ฟังก์ชันดึงหมวดหมู่เดิมที่มีอยู่แล้วในระบบมาทำตัวเลือก
+    async function loadCategories() {
+      const catSelect = document.getElementById('categorySelect');
+      try {
+        const querySnapshot = await getDocs(collection(db, "menus"));
+        const categories = new Set();
+        
+        querySnapshot.forEach((doc) => {
+          if (doc.data().category) {
+            categories.add(doc.data().category);
+          }
+        });
+        
+        catSelect.innerHTML = '<option value="" disabled selected>-- เลือกหมวดหมู่อาหาร --</option>';
+        
+        categories.forEach(cat => {
+          catSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+        });
+        
+        catSelect.innerHTML += '<option value="NEW" style="color: blue; font-weight: bold;">+ เพิ่มหมวดหมู่ใหม่...</option>';
+        
+      } catch (error) {
+        console.error("Error loading categories", error);
+        catSelect.innerHTML = '<option value="" disabled selected>โหลดหมวดหมู่ล้มเหลว</option>';
+      }
+    }
+
+    // เรียกใช้งานโหลดหมวดหมู่ทันทีเมื่อเปิดหน้าแอดมิน
+    loadCategories();
+
+    // ตรวจจับเมื่อผู้ใช้เลือกหมวดหมู่
+    document.getElementById('categorySelect').addEventListener('change', function() {
+      const newCatInput = document.getElementById('newCategoryInput');
+      if (this.value === 'NEW') {
+        // ถ้าเลือกเพิ่มใหม่ ให้แสดงช่องพิมพ์ข้อความ
+        newCatInput.style.display = 'block';
+        newCatInput.required = true;
+      } else {
+        // ถ้าเลือกอันเดิม ให้ซ่อนช่องพิมพ์ข้อความ
+        newCatInput.style.display = 'none';
+        newCatInput.required = false;
+        newCatInput.value = '';
+      }
+    });
 
     document.getElementById('addMenuForm').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -47,12 +98,14 @@
       btn.disabled = true;
 
       const file = document.getElementById('imageFile').files[0];
-      const category = document.getElementById('category').value;
       const name = document.getElementById('name').value;
       const price = document.getElementById('price').value;
+      
+      // กำหนดค่าหมวดหมู่ (เช็คว่าเลือกอันเดิม หรือ พิมพ์อันใหม่)
+      const selectValue = document.getElementById('categorySelect').value;
+      const category = selectValue === 'NEW' ? document.getElementById('newCategoryInput').value : selectValue;
 
       try {
-        // 1. อัปโหลดเข้า Cloudinary
         const formData = new FormData();
         formData.append("file", file);
         formData.append("upload_preset", UPLOAD_PRESET);
@@ -62,14 +115,11 @@
           body: formData
         });
         
-        if (!res.ok) {
-            throw new Error("อัปโหลดรูปภาพไม่สำเร็จ กรุณาตรวจสอบการตั้งค่า Unsigned Upload ใน Cloudinary");
-        }
+        if (!res.ok) throw new Error("อัปโหลดรูปภาพไม่สำเร็จ");
         
         const cloudData = await res.json();
         const imageUrl = cloudData.secure_url;
 
-        // 2. บันทึกลง Firebase Firestore
         btn.innerText = "กำลังบันทึกลงฐานข้อมูล...";
         await addDoc(collection(db, "menus"), {
           category: category,
@@ -80,7 +130,11 @@
         });
 
         alert("เพิ่มเมนูเรียบร้อยแล้ว!");
+        
+        // รีเซ็ตฟอร์มและโหลดหมวดหมู่อัปเดตใหม่
         document.getElementById('addMenuForm').reset();
+        document.getElementById('newCategoryInput').style.display = 'none';
+        loadCategories();
         
       } catch (error) {
         console.error("Error:", error);
