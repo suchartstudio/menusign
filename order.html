@@ -2,31 +2,62 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>ห้องครัว - ยำร่วมจิตร</title>
-  <link href="https://fonts.googleapis.com/css2?family=Mali:wght@700&display=swap" rel="stylesheet">
+  <title>จัดการออเดอร์ - ยำร่วมจิตร</title>
+  <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Mali', cursive; background: #263238; color: white; padding: 20px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+    body { font-family: 'Mali', cursive; background: #263238; color: white; padding: 20px; margin: 0; }
+    
+    /* ส่วนบน: ออเดอร์กำลังปรุง */
+    .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; margin-bottom: 40px; }
     .card { background: white; color: #333; border-radius: 15px; padding: 15px; position: relative; border-left: 10px solid #FF5722; animation: fadeIn 0.5s; }
     .time { font-size: 0.85rem; color: #666; margin-bottom: 5px; }
-    ul { margin: 10px 0; padding-left: 20px; font-size: 1.3rem; font-weight: bold; }
-    li { margin-bottom: 5px; border-bottom: 1px dashed #eee; padding-bottom: 3px; }
-    .done-btn { width: 100%; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 10px; cursor: pointer; font-family: 'Mali'; font-weight: bold; font-size: 1rem; margin-top: 10px; }
-    .total-price { text-align: right; font-weight: bold; color: #E91E63; font-size: 1.5rem; }
+    .card ul { margin: 10px 0; padding-left: 20px; font-size: 1.3rem; font-weight: bold; }
+    .card li { margin-bottom: 5px; border-bottom: 1px dashed #eee; padding-bottom: 3px; }
+    .done-btn { width: 100%; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 10px; cursor: pointer; font-family: 'Mali'; font-weight: bold; font-size: 1.1rem; margin-top: 10px; }
+    .total-price { text-align: right; font-weight: bold; color: #E91E63; font-size: 1.6rem; }
+
+    /* ส่วนล่าง: ตารางบันทึกรายการที่จ่ายเงินแล้ว */
+    .history-section { background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); }
+    .history-section h2 { color: #81C784; margin-top: 0; }
+    table { width: 100%; border-collapse: collapse; background: white; color: #333; border-radius: 15px; overflow: hidden; }
+    th { background: #455A64; color: white; padding: 12px; text-align: left; }
+    td { padding: 12px; border-bottom: 1px solid #eee; }
+    tr:nth-child(even) { background: #f9f9f9; }
+    .status-tag { background: #E8F5E9; color: #2E7D32; padding: 4px 10px; border-radius: 10px; font-size: 0.85rem; font-weight: bold; }
+
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-    <h1>🔔 ออเดอร์เข้าใหม่ (Kitchen)</h1>
-    <button onclick="enableAudio()" id="audioBtn" style="background:#FF5722; color:white; border:none; padding:12px 25px; border-radius:15px; font-family:'Mali'; cursor:pointer; font-weight:bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">🔊 เปิดระบบเสียงแจ้งเตือน</button>
+
+  <div class="header-section">
+    <h1>🔔 ออเดอร์กำลังปรุง</h1>
+    <button onclick="enableAudio()" id="audioBtn" style="background:#FF5722; color:white; border:none; padding:12px 25px; border-radius:15px; font-family:'Mali'; cursor:pointer; font-weight:bold;">🔊 เปิดระบบเสียงแจ้งเตือน</button>
   </div>
   
-  <div class="grid" id="orderGrid"></div>
+  <div class="grid" id="orderGrid">
+    </div>
+
+  <div class="history-section">
+    <h2>✅ บันทึกรายการที่จ่ายเงินแล้ว (ล่าสุด 20 รายการ)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>เวลา</th>
+          <th>รายการอาหาร</th>
+          <th>ยอดรวม</th>
+          <th style="text-align:center;">สถานะ</th>
+        </tr>
+      </thead>
+      <tbody id="historyTableBody">
+        </tbody>
+    </table>
+  </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-  import { getFirestore, collection, query, where, onSnapshot, updateDoc, doc, orderBy } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+  import { getFirestore, collection, query, where, onSnapshot, updateDoc, doc, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBCR9k_D1GiVugnFqsIxf33Ge96rCmhbZs",
@@ -44,69 +75,66 @@
   window.enableAudio = () => { 
     audioEnabled = true; 
     document.getElementById('audioBtn').style.background = "#4CAF50";
-    document.getElementById('audioBtn').innerText = "✅ ระบบเสียงทำงานแล้ว"; 
-    
-    // ทดสอบเสียงทันทีที่กดเปิด
-    const testMsg = new SpeechSynthesisUtterance("ระบบเสียงพร้อมประกาศแล้วค่ะ");
-    testMsg.lang = 'th-TH';
-    testMsg.rate = 0.8;
-    window.speechSynthesis.speak(testMsg);
+    document.getElementById('audioBtn').innerText = "✅ ระบบเสียงพร้อมใช้งาน"; 
+    const t = new SpeechSynthesisUtterance("ระบบเสียงพร้อมทำงานค่ะ");
+    t.lang = 'th-TH'; t.rate = 0.8; window.speechSynthesis.speak(t);
   };
 
   function speakOrder(items) {
     if(!audioEnabled) return;
-
-    // เตรียมข้อความโดยเพิ่มเว้นวรรคระหว่างคำเพื่อให้ AI เว้นจังหวะ
-    // เช่น "รายการ มี ดังนี้ ... ส้มตำ ... ยำปูม้า"
-    const itemListText = items.join(" . . . "); // ใช้จุดและเว้นวรรคช่วยสร้างจังหวะหยุดพัก
-    const fullText = `มีออเดอร์ใหม่ . . รายการคือ . . ${itemListText}`;
-
-    const msg = new SpeechSynthesisUtterance(fullText);
-    msg.lang = 'th-TH';
-    
-    // --- ปรับแต่งความเร็วและจังหวะที่นี่ ---
-    msg.rate = 0.8;  // ความเร็ว (0.1 - 10) : 0.8 คือช้ากว่าปกติเล็กน้อยเพื่อให้ชัดเจน
-    msg.pitch = 1.0; // ระดับเสียงสูงต่ำ (0 - 2)
-    msg.volume = 1.0; // ความดัง (0 - 1)
-
-    window.speechSynthesis.speak(msg);
+    const text = `มีออเดอร์ใหม่ . . . รายการคือ . . . ${items.join(" . . . ")}`;
+    const msg = new SpeechSynthesisUtterance(text);
+    msg.lang = 'th-TH'; msg.rate = 0.8; window.speechSynthesis.speak(msg);
   }
 
-  // ดึงข้อมูล Real-time
-  const q = query(collection(db, "orders"), where("status", "==", "pending"), orderBy("createdAt", "asc"));
-  
-  onSnapshot(q, (snap) => {
+  // 1. ดึงออเดอร์ที่กำลังปรุง (Pending)
+  const qPending = query(collection(db, "orders"), where("status", "==", "pending"), orderBy("createdAt", "asc"));
+  onSnapshot(qPending, (snap) => {
     const area = document.getElementById('orderGrid');
     area.innerHTML = '';
-    
-    // ตรวจสอบออเดอร์ที่เพิ่มมาใหม่เพื่ออ่านออกเสียง
-    snap.docChanges().forEach(change => { 
-      if(change.type === 'added') {
-        const data = change.doc.data();
-        // เรียกฟังก์ชันเสียง
-        speakOrder(data.items);
-      } 
-    });
-
-    // แสดงผลรายการบนหน้าจอ
+    snap.docChanges().forEach(change => { if(change.type === 'added') speakOrder(change.doc.data().items); });
     snap.forEach(d => {
       const o = d.data();
-      const div = document.createElement('div'); 
-      div.className = 'card';
-      const timeStr = o.createdAt?.toDate().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) || 'เมื่อครู่';
-      
+      const timeStr = o.createdAt?.toDate().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) || '--:--';
+      const div = document.createElement('div'); div.className = 'card';
       div.innerHTML = `
         <div class="time">🕒 เวลาสั่ง: ${timeStr}</div>
         <ul>${o.items.map(i => `<li>${i}</li>`).join('')}</ul>
         <div class="total-price">${o.total.toLocaleString()}.-</div>
-        <button class="done-btn" onclick="done('${d.id}')">ทำเสร็จแล้ว / จ่ายเงินแล้ว</button>
+        <button class="done-btn" onclick="done('${d.id}')">ทำเสร็จสิ้น / รับเงินแล้ว</button>
       `;
       area.appendChild(div);
     });
   });
 
+  // 2. ดึงออเดอร์ที่เสร็จแล้ว (Completed) มาลงตาราง
+  // หมายเหตุ: การใช้ orderBy ร่วมกับ where อาจต้องรอสร้าง Index ใหม่ถ้ายังไม่เคยทำ
+  const qHistory = query(
+    collection(db, "orders"), 
+    where("status", "==", "completed"), 
+    orderBy("createdAt", "desc"),
+    limit(20)
+  );
+
+  onSnapshot(qHistory, (snap) => {
+    const tableBody = document.getElementById('historyTableBody');
+    tableBody.innerHTML = '';
+    snap.forEach(d => {
+      const o = d.data();
+      const timeStr = o.createdAt?.toDate().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) || '--:--';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="color:#666; font-weight:bold;">${timeStr}</td>
+        <td>${o.items.join(', ')}</td>
+        <td style="font-weight:bold; color:#E91E63;">${o.total.toLocaleString()}.-</td>
+        <td style="text-align:center;"><span class="status-tag">จ่ายเงินแล้ว</span></td>
+      `;
+      tableBody.appendChild(tr);
+    });
+  });
+
   window.done = async (id) => { 
-    if(confirm('ยืนยันออเดอร์เสร็จสิ้น?')) {
+    if(confirm('ยืนยันออเดอร์เสร็จสิ้นและได้รับเงินแล้ว?')) {
       await updateDoc(doc(db, "orders", id), { status: 'completed' }); 
     }
   };
