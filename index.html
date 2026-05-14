@@ -1,7 +1,26 @@
-<script type="module">
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TV Menu Display</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- โครงสร้าง HTML ที่จำเป็นสำหรับแสดงผลบนจอ -->
+  <div class="tv-container">
+    <div class="category-header" id="categoryName">กำลังโหลดข้อมูล...</div>
+    <div class="menu-list" id="menuList">
+      <!-- ข้อมูลเมนูจะถูกนำมาใส่ตรงนี้อัตโนมัติ -->
+    </div>
+  </div>
+
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
     import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
+    // Firebase Configuration ของคุณ
     const firebaseConfig = {
       apiKey: "AIzaSyBCR9k_D1GiVugnFqsIxf33Ge96rCmhbZs",
       authDomain: "signage-eac53.firebaseapp.com",
@@ -27,26 +46,34 @@
           allMenus.push(doc.data());
         });
         
+        const categoryNameEl = document.getElementById('categoryName');
+        
         if(allMenus.length > 0) {
           renderDisplay();
           setInterval(renderDisplay, 10000); // สลับหน้าจอทุกๆ 10 วินาที
         } else {
-          document.getElementById('categoryName').innerText = "ยังไม่มีข้อมูลเมนู";
+          if(categoryNameEl) categoryNameEl.innerText = "ยังไม่มีข้อมูลเมนู";
         }
       } catch (error) {
         console.error("Error fetching menus: ", error);
-        document.getElementById('categoryName').innerText = "เกิดข้อผิดพลาดในการโหลดข้อมูล";
+        const categoryNameEl = document.getElementById('categoryName');
+        if(categoryNameEl) categoryNameEl.innerText = "เกิดข้อผิดพลาดในการโหลดข้อมูล";
       }
     }
 
     function renderDisplay() {
       const menuListDiv = document.getElementById('menuList');
+      const categoryNameEl = document.getElementById('categoryName');
+      
+      // ป้องกัน Error กรณีหา HTML ไม่เจอ
+      if (!menuListDiv) return; 
+
       menuListDiv.innerHTML = ''; 
       
       const currentItems = allMenus.slice(currentIndex, currentIndex + itemsPerPage);
       
-      if(currentItems.length > 0) {
-        document.getElementById('categoryName').innerText = `หมวดหมู่: ${currentItems[0].category}`;
+      if(currentItems.length > 0 && categoryNameEl) {
+        categoryNameEl.innerText = `หมวดหมู่: ${currentItems[0].category}`;
       }
 
       currentItems.forEach(item => {
@@ -68,5 +95,8 @@
       }
     }
 
+    // เริ่มการดึงข้อมูล
     fetchMenus();
   </script>
+</body>
+</html>
