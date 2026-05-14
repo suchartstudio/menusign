@@ -4,6 +4,21 @@
   <meta charset="UTF-8">
   <title>Admin - จัดการร้านยำร่วมจิตร</title>
   <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#FF5722">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="ยำร่วมจิตร">
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(reg => console.log('Service Worker registered!'))
+        .catch(err => console.log('Service Worker failed', err));
+    });
+  }
+</script>
   <style>
     body { font-family: 'Mali', cursive; background: #f0f2f5; padding: 20px; }
     .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
