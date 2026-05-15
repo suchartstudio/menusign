@@ -2,54 +2,107 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>Admin - จัดการร้านยำร่วมจิตร</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - ยำร่วมจิตร</title>
   <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#FF5722">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="ยำร่วมจิตร">
-
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js')
-        .then(reg => console.log('Service Worker registered!'))
-        .catch(err => console.log('Service Worker failed', err));
-    });
-  }
-</script>
+  <meta name="theme-color" content="#FF5722">
   <style>
-    body { font-family: 'Mali', cursive; background: #f0f2f5; padding: 20px; }
-    .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-    h2 { color: #FF5722; border-bottom: 2px solid #FF5722; padding-bottom: 10px; }
-    input, select, button { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ddd; font-family: 'Mali'; }
-    .checkbox-group { display: flex; align-items: center; margin-bottom: 15px; gap: 10px; }
-    .checkbox-group input { width: auto; margin: 0; }
-    button { background: #FF5722; color: white; border: none; font-weight: bold; cursor: pointer; font-size: 1.1rem; }
-    .edit-btn { background: #FFC107; color: black; width: auto; padding: 5px 15px; }
-    .delete-btn { background: #f44336; color: white; width: auto; padding: 5px 15px; margin-left: 5px; }
-    .menu-item { display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; }
-    .menu-item img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-right: 15px; }
+    :root {
+      --primary: #FF5722;
+      --secondary: #FFC107;
+      --danger: #f44336;
+      --success: #4CAF50;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Mali', cursive; background: #FFFDF7; padding: 15px; color: #333; }
+
+    .admin-container { max-width: 100%; margin: auto; }
+    
+    h2 { color: var(--primary); font-size: 1.8rem; text-align: center; margin-bottom: 20px; border-bottom: 3px solid var(--secondary); padding-bottom: 10px; }
+
+    /* สไตล์ฟอร์ม: ใหญ่และชัดเจน */
+    .form-group { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; }
+    
+    label { display: block; font-weight: 700; margin-bottom: 8px; font-size: 1.1rem; color: #555; }
+    
+    input[type="text"], input[type="number"], select {
+      width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 12px; border: 2px solid #ddd;
+      font-family: 'Mali'; font-size: 1.3rem; /* ตัวหนังสือใหญ่ */
+      background: #fafafa;
+    }
+
+    input[type="checkbox"] { width: 25px; height: 25px; vertical-align: middle; }
+    .check-label { font-size: 1.2rem; font-weight: 700; color: #2E7D32; }
+
+    .file-input-wrapper { margin-bottom: 20px; }
+    input[type="file"] { font-size: 1rem; color: #666; }
+
+    button { 
+      width: 100%; padding: 18px; border-radius: 15px; border: none; 
+      font-family: 'Mali'; font-weight: 700; font-size: 1.4rem; cursor: pointer;
+      transition: 0.3s;
+    }
+    .submit-btn { background: var(--primary); color: white; margin-bottom: 10px; box-shadow: 0 5px 0 #bf360c; }
+    .cancel-btn { background: #9e9e9e; color: white; display: none; }
+
+    /* รายการเมนู: แบบการ์ดอ่านง่าย */
+    .menu-list-title { font-size: 1.5rem; color: #333; margin: 20px 0 10px; padding-left: 5px; }
+    
+    .menu-card {
+      background: white; border-radius: 20px; padding: 15px; margin-bottom: 15px;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 2px solid #eee;
+    }
+    .menu-card img { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 3px solid var(--secondary); margin-right: 15px; }
+    .menu-info { flex-grow: 1; }
+    .menu-info b { font-size: 1.3rem; display: block; color: #222; }
+    .menu-info span { font-size: 1rem; color: #666; }
+    
+    .actions { display: flex; flex-direction: column; gap: 8px; }
+    .edit-btn { background: var(--secondary); color: black; font-size: 0.9rem; padding: 8px 15px; border-radius: 10px; }
+    .delete-btn { background: var(--danger); color: white; font-size: 0.9rem; padding: 8px 15px; border-radius: 10px; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   </style>
+  <script>
+    if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); }); }
+  </script>
 </head>
 <body>
-<div class="container">
-  <h2 id="formTitle">🍳 จัดการรายการอาหาร</h2>
-  <form id="menuForm">
-    <select id="categorySelect" required><option value="">กำลังโหลดหมวดหมู่...</option></select>
-    <input type="text" id="newCategoryInput" placeholder="ชื่อหมวดหมู่ใหม่ (ถ้ามี)" style="display:none;">
-    <input type="text" id="name" placeholder="ชื่ออาหาร" required>
-    <input type="number" id="price" placeholder="ราคา (บาท)" required>
-    <div class="checkbox-group">
-      <input type="checkbox" id="isRecommended"> <label for="isRecommended">🌟 ตั้งเป็นเมนูแนะนำ</label>
-    </div>
-    <input type="file" id="imageFile" accept="image/*">
-    <button type="submit" id="submitBtn">บันทึกข้อมูล</button>
-    <button type="button" id="cancelBtn" style="display:none; background:#999;">ยกเลิก</button>
-  </form>
 
-  <div id="menuList"><h3>รายการทั้งหมด</h3><div id="listContainer">กำลังโหลด...</div></div>
+<div class="admin-container">
+  <h2 id="formTitle">🥘 จัดการเมนูอาหาร</h2>
+
+  <div class="form-group">
+    <form id="menuForm">
+      <label>เลือกหมวดหมู่</label>
+      <select id="categorySelect" required><option value="">กำลังโหลด...</option></select>
+      <input type="text" id="newCategoryInput" placeholder="ระบุชื่อหมวดหมู่ใหม่" style="display:none;">
+
+      <label>ชื่อรายการอาหาร</label>
+      <input type="text" id="name" placeholder="เช่น ยำรวมมิตร" required>
+
+      <label>ราคา (บาท)</label>
+      <input type="number" id="price" placeholder="0" required>
+
+      <div style="margin-bottom: 20px;">
+        <input type="checkbox" id="isRecommended"> 
+        <label class="check-label" style="display:inline;" for="isRecommended">🌟 ตั้งเป็นเมนูแนะนำ</label>
+      </div>
+
+      <label>รูปภาพอาหาร</label>
+      <div class="file-input-wrapper">
+        <input type="file" id="imageFile" accept="image/*">
+      </div>
+
+      <button type="submit" id="submitBtn" class="submit-btn">บันทึกข้อมูล</button>
+      <button type="button" id="cancelBtn" class="cancel-btn">ยกเลิกแก้ไข</button>
+    </form>
+  </div>
+
+  <h3 class="menu-list-title">📋 รายการเมนูทั้งหมด</h3>
+  <div id="listContainer">กำลังโหลดรายการ...</div>
 </div>
 
 <script type="module">
@@ -79,63 +132,98 @@
     let html = '';
     snap.forEach(d => {
       const m = d.data(); cats.add(m.category);
-      html += `<div class="menu-item">
-        <div style="display:flex;align-items:center;"><img src="${m.imageUrl}">
-        <div><b>${m.name}</b> ${m.isRecommended ? '⭐':''}<br><small>${m.category} | ${m.price}.-</small></div></div>
-        <div>
-          <button class="edit-btn" onclick="editItem('${encodeURIComponent(JSON.stringify({...m, id:d.id}))}')">แก้ไข</button>
-          <button class="delete-btn" onclick="deleteItem('${d.id}')">ลบ</button>
-        </div>
-      </div>`;
+      html += `
+        <div class="menu-card">
+          <img src="${m.imageUrl}">
+          <div class="menu-info">
+            <b>${m.name} ${m.isRecommended ? '🌟':''}</b>
+            <span>${m.category} | ${m.price}.-</span>
+          </div>
+          <div class="actions">
+            <button class="edit-btn" onclick="editItem('${encodeURIComponent(JSON.stringify({...m, id:d.id}))}')">แก้ไข</button>
+            <button class="delete-btn" onclick="deleteItem('${d.id}')">ลบ</button>
+          </div>
+        </div>`;
     });
-    document.getElementById('listContainer').innerHTML = html;
+    document.getElementById('listContainer').innerHTML = html || '<p style="text-align:center;color:#999;">ยังไม่มีรายการเมนู</p>';
+    
     let catHtml = '<option value="" disabled selected>-- เลือกหมวดหมู่ --</option>';
     cats.forEach(c => catHtml += `<option value="${c}">${c}</option>`);
-    catHtml += '<option value="NEW">+ เพิ่มหมวดหมู่ใหม่</option>';
+    catHtml += '<option value="NEW" style="color:blue;font-weight:bold;">+ เพิ่มหมวดหมู่ใหม่</option>';
     document.getElementById('categorySelect').innerHTML = catHtml;
   }
 
   window.editItem = (str) => {
     const data = JSON.parse(decodeURIComponent(str));
     editingId = data.id; currentImageUrl = data.imageUrl;
+    document.getElementById('formTitle').innerText = "📝 แก้ไขเมนู";
     document.getElementById('name').value = data.name;
     document.getElementById('price').value = data.price;
     document.getElementById('categorySelect').value = data.category;
     document.getElementById('isRecommended').checked = data.isRecommended || false;
     document.getElementById('submitBtn').innerText = "อัปเดตข้อมูล";
     document.getElementById('cancelBtn').style.display = "block";
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  window.deleteItem = async (id) => { if(confirm('ยืนยันการลบ?')) { await deleteDoc(doc(db, "menus", id)); loadMenus(); } };
+  window.deleteItem = async (id) => { 
+    if(confirm('คุณแน่ใจหรือไม่ว่าจะลบเมนูนี้?')) { 
+      await deleteDoc(doc(db, "menus", id)); 
+      loadMenus(); 
+    } 
+  };
 
   document.getElementById('categorySelect').onchange = function() { 
     document.getElementById('newCategoryInput').style.display = this.value === 'NEW' ? 'block' : 'none'; 
   };
 
+  document.getElementById('cancelBtn').onclick = () => {
+    editingId = null;
+    document.getElementById('menuForm').reset();
+    document.getElementById('formTitle').innerText = "🥘 จัดการเมนูอาหาร";
+    document.getElementById('submitBtn').innerText = "บันทึกข้อมูล";
+    document.getElementById('cancelBtn').style.display = "none";
+    document.getElementById('newCategoryInput').style.display = "none";
+  };
+
   document.getElementById('menuForm').onsubmit = async (e) => {
     e.preventDefault();
-    const btn = document.getElementById('submitBtn'); btn.disabled = true;
+    const btn = document.getElementById('submitBtn'); 
+    btn.disabled = true; btn.innerText = "กำลังประมวลผล...";
+
     const file = document.getElementById('imageFile').files[0];
     const category = document.getElementById('categorySelect').value === 'NEW' ? document.getElementById('newCategoryInput').value : document.getElementById('categorySelect').value;
     
     try {
       let url = currentImageUrl;
       if (file) {
+        btn.innerText = "กำลังอัปโหลดรูป...";
         const fd = new FormData(); fd.append("file", file); fd.append("upload_preset", UPLOAD_PRESET);
         const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: "POST", body: fd });
         const d = await res.json(); url = d.secure_url;
       }
+
       const payload = { 
         name: document.getElementById('name').value, 
         price: parseInt(document.getElementById('price').value), 
         category, imageUrl: url, 
         isRecommended: document.getElementById('isRecommended').checked 
       };
-      if (editingId) await updateDoc(doc(db, "menus", editingId), payload);
-      else await addDoc(collection(db, "menus"), { ...payload, createdAt: serverTimestamp() });
+
+      if (editingId) {
+        await updateDoc(doc(db, "menus", editingId), payload);
+        alert("อัปเดตสำเร็จ!");
+      } else {
+        await addDoc(collection(db, "menus"), { ...payload, createdAt: serverTimestamp() });
+        alert("เพิ่มเมนูใหม่สำเร็จ!");
+      }
       
-      alert("สำเร็จ!"); location.reload();
-    } catch (e) { alert(e.message); btn.disabled = false; }
+      location.reload();
+    } catch (e) { 
+      alert("เกิดข้อผิดพลาด: " + e.message); 
+      btn.disabled = false; 
+      btn.innerText = "บันทึกข้อมูล";
+    }
   };
 
   loadMenus();
