@@ -3,167 +3,113 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ยำร่วมจิตร - TV Menu Display</title>
+  <title>ยำร่วมจิตร - จอแสดงผลรวม</title>
   <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="manifest" href="manifest.json">
   <style>
-    :root {
-      --primary: #FF5722; 
-      --secondary: #FFEB3B;
-      --shop-bg: #2E7D32;
-    }
+    :root { --primary: #FF5722; --shop-bg: #2E7D32; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Mali', cursive;
-      background-color: #FFFDE7; /* พื้นหลังเหลืองนวลสดใส */
-      overflow: hidden;
-      width: 100vw; height: 100vh;
-    }
-    .tv-container {
-      width: 100vw; height: 100vh;
-      display: flex; flex-direction: column;
-      padding: 1.5vw 3vw;
-    }
-    /* หัวข้อร้าน: ใหญ่ สวยงาม */
-    .header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 2vh; padding: 1vh 0;
-      border-bottom: 6px dotted var(--primary);
-    }
-    .category-left { 
-      font-size: 4.5vw; font-weight: 700; color: var(--primary); 
-      text-shadow: 2px 2px 0px #fff;
-    }
-    .shop-right {
-      color: #fff; font-size: 6vw; font-weight: 700;
-      background: var(--shop-bg); padding: 1vh 4vw;
-      border-radius: 100px 20px 100px 20px; 
-      border: 6px solid #C8E6C9;
-      box-shadow: 6px 6px 0px rgba(0,0,0,0.1);
-    }
+    /* ปรับ body ให้แสดงผลแบบ flex เพื่อแบ่งซ้าย-ขวา */
+    body { font-family: 'Mali', cursive; background-color: #FFFDE7; overflow: hidden; height: 100vh; display: flex; }
 
-    .menu-list {
-      flex-grow: 1; display: flex; flex-direction: column;
-      justify-content: space-between; padding-bottom: 1vh;
-    }
-    /* การ์ดเมนู: สีสดใสขอบหนา */
-    .menu-row {
-      display: flex; align-items: center; height: 18.5vh;
-      border-radius: 40px; padding: 0 2.5vw;
-      box-shadow: 0 10px 0px rgba(0,0,0,0.05);
-      animation: bounceIn 0.8s ease-out;
-      border: 6px solid #fff;
-    }
-    .bg-0 { background-color: #FF7043; color: white; border-color: #FFCCBC; }
-    .bg-1 { background-color: #26A69A; color: white; border-color: #B2DFDB; }
-    .bg-2 { background-color: #AB47BC; color: white; border-color: #E1BEE7; }
-    .bg-3 { background-color: #FFA726; color: white; border-color: #FFE0B2; }
-
-    .menu-img-wrapper {
-      width: 16vh; height: 16vh; flex-shrink: 0;
-      border-radius: 50%; border: 6px solid #FFF;
-      overflow: hidden; background-color: #FFF;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }
-    .menu-img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
-
-    .menu-name {
-      flex-grow: 1; font-size: 5vw; font-weight: 700;
-      padding-left: 2.5vw; line-height: 1.3;
-      display: flex; align-items: center;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-    }
-    .menu-price {
-      font-size: 6vw; font-weight: 700; color: #FFF;
-      background: rgba(0, 0, 0, 0.2);
-      padding: 0.5vh 3vw; border-radius: 30px;
-    }
+    /* คอลัมน์ซ้าย: เมนู (75% ของจอ) */
+    .menu-side { width: 75%; height: 100vh; padding: 2vh 2vw; display: flex; flex-direction: column; }
     
-    /* Emoji ดุ๊กดิ๊ก */
-    .emoji-icon {
-      font-size: 6vw; margin-right: 2vw; display: inline-block;
-      animation: wiggle 1.2s infinite ease-in-out;
+    /* คอลัมน์ขวา: ออเดอร์ (25% ของจอ) */
+    .order-side { 
+      width: 25%; height: 100vh; background: #37474F; 
+      color: white; padding: 2vh 1vw; border-left: 6px solid var(--primary);
+      overflow-y: hidden;
     }
-    @keyframes wiggle {
-      0%, 100% { transform: rotate(-12deg) scale(1); }
-      50% { transform: rotate(18deg) scale(1.3); }
-    }
-    @keyframes bounceIn {
-      0% { opacity: 0; transform: scale(0.8); }
-      70% { transform: scale(1.05); }
-      100% { opacity: 1; transform: scale(1); }
-    }
+
+    /* Header ฝั่งเมนู */
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2vh; border-bottom: 6px dotted var(--primary); padding-bottom: 1vh; }
+    .shop-name { color: #fff; background: var(--shop-bg); padding: 0.5vh 2vw; border-radius: 50px; font-weight: 700; font-size: 3vw; border: 4px solid #C8E6C9; }
+    
+    /* สไตล์เมนู */
+    .menu-row { display: flex; align-items: center; height: 17vh; border-radius: 30px; padding: 0 2vw; background: white; margin-bottom: 1.5vh; border: 4px solid #fff; box-shadow: 0 5px 0 rgba(0,0,0,0.1); }
+    .menu-img { width: 14vh; height: 14vh; border-radius: 50%; object-fit: cover; border: 4px solid #FFC107; }
+    .menu-name { flex-grow: 1; font-size: 3.5vw; font-weight: 700; padding-left: 2vw; }
+    .menu-price { font-size: 4vw; font-weight: 700; color: #E91E63; }
+
+    /* สไตล์ออเดอร์ด้านข้าง */
+    .order-title { font-size: 2vw; margin-bottom: 1.5vh; color: #FFEB3B; font-weight: 700; border-bottom: 2px solid #555; padding-bottom: 5px; }
+    .order-card { background: #455A64; padding: 1.5vh; border-radius: 15px; margin-bottom: 1.5vh; font-size: 1.5vw; }
+    .order-item-list { list-style: none; margin-top: 5px; font-weight: 600; color: #E0E0E0; }
   </style>
-  <script>
-    if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); }); }
-  </script>
 </head>
 <body>
 
-  <div class="tv-container">
+  <!-- ฝั่งเมนูอาหาร -->
+  <div class="menu-side">
     <div class="header">
-      <div id="categoryName" class="category-left">กำลังโหลด...</div>
-      <div class="shop-right">🏠 ยำร่วมจิตร</div>
+      <div id="categoryName" style="font-size: 3.5vw; font-weight: 700; color: var(--primary);">กำลังโหลด...</div>
+      <div class="shop-name">🏠 ยำร่วมจิตร</div>
     </div>
-    <div class="menu-list" id="menuList"></div>
+    <div id="menuList"></div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+  <!-- ฝั่งออเดอร์ -->
+  <div class="order-side">
+    <div class="order-title">🔔 กำลังปรุง</div>
+    <div id="sideOrderList"></div>
+  </div>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBCR9k_D1GiVugnFqsIxf33Ge96rCmhbZs",
-      authDomain: "signage-eac53.firebaseapp.com",
-      projectId: "signage-eac53",
-      storageBucket: "signage-eac53.firebasestorage.app",
-      messagingSenderId: "184834384558",
-      appId: "1:184834384558:web:227f079ed8c161ca36c33f"
-    };
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+  import { getFirestore, collection, getDocs, query, where, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+  const firebaseConfig = {
+    apiKey: "AIzaSyBCR9k_D1GiVugnFqsIxf33Ge96rCmhbZs",
+    authDomain: "signage-eac53.firebaseapp.com",
+    projectId: "signage-eac53",
+    storageBucket: "signage-eac53.firebasestorage.app",
+    messagingSenderId: "184834384558",
+    appId: "1:184834384558:web:227f079ed8c161ca36c33f"
+  };
 
-    let pages = [];
-    let curIndex = 0;
-    const emojis = ['🍳', '🍲', '🍜', '🍛', '🍝', '🍕', '🍔', '🍟', '🍖', '🍤', '🥗', '🥘'];
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-    async function fetchData() {
-      const snap = await getDocs(collection(db, "menus"));
-      let all = []; snap.forEach(d => all.push(d.data()));
-      
-      let groups = { "🌟 เมนูแนะนำ": all.filter(m => m.isRecommended) };
-      all.forEach(m => { if(!groups[m.category]) groups[m.category] = []; groups[m.category].push(m); });
+  // 1. ระบบเมนู
+  let pages = []; let curIndex = 0;
+  async function fetchMenu() {
+    const snap = await getDocs(collection(db, "menus"));
+    let all = []; snap.forEach(d => all.push(d.data()));
+    pages = []; 
+    for(let i=0; i<all.length; i+=4) pages.push(all.slice(i, i+4));
+    setInterval(renderMenu, 8000); renderMenu();
+  }
+  function renderMenu() {
+    if(!pages.length) return;
+    const list = document.getElementById('menuList');
+    list.innerHTML = pages[curIndex].map(m => `
+      <div class="menu-row">
+        <img src="${m.imageUrl}" class="menu-img">
+        <div class="menu-name">${m.name}</div>
+        <div class="menu-price">${m.price}.-</div>
+      </div>
+    `).join('');
+    document.getElementById('categoryName').innerText = "📋 เมนูอาหาร";
+    curIndex = (curIndex + 1) % pages.length;
+  }
 
-      pages = [];
-      Object.keys(groups).forEach(cat => {
-        const items = groups[cat];
-        for(let i=0; i<items.length; i+=4) {
-          pages.push({ cat, list: items.slice(i, i+4) });
-        }
-      });
-      render();
-      setInterval(render, 10000);
-    }
-
-    function render() {
-      if(!pages.length) return;
-      const p = pages[curIndex];
-      document.getElementById('categoryName').innerText = `📁 ${p.cat}`;
-      const area = document.getElementById('menuList');
-      area.innerHTML = p.list.map((m, i) => `
-        <div class="menu-row bg-${i}">
-          <div class="menu-img-wrapper"><img src="${m.imageUrl}"></div>
-          <div class="menu-name">
-            <span class="emoji-icon">${emojis[Math.floor(Math.random() * emojis.length)]}</span>
-            ${m.name}
-          </div>
-          <div class="menu-price">${m.price}.-</div>
+  // 2. ระบบออเดอร์ด้านข้าง
+  onSnapshot(query(collection(db, "orders"), where("status", "==", "pending"), orderBy("createdAt", "asc")), (snap) => {
+    const side = document.getElementById('sideOrderList');
+    side.innerHTML = '';
+    snap.forEach(d => {
+      const o = d.data();
+      side.innerHTML += `
+        <div class="order-card">
+          <div>🕒 ${o.createdAt?.toDate().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'})}</div>
+          <ul class="order-item-list">${o.items.map(i => `<li>• ${i}</li>`).join('')}</ul>
         </div>
-      `).join('');
-      curIndex = (curIndex + 1) % pages.length;
-    }
-    fetchData();
-  </script>
+      `;
+    });
+  });
+
+  fetchMenu();
+</script>
 </body>
 </html>
